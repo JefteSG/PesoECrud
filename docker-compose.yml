@@ -38,6 +38,18 @@ services:
       - db
     networks:
       - my_network
+    
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: frontend_container
+  #   ports:
+  #     - "5500:5500"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - my_network
 
 networks:
   my_network:

@@ -36,8 +36,8 @@
             <label for="peso">Peso (em quilos):</label>
             <input type="number" step="0.1" name="peso" id="peso">
     
-            <label for="altura">Altura (em centimetros):</label>
-            <input type="number" name="altura" id="altura" required>
+            <label for="altura">Altura (em metros):</label>
+            <input type="number" step ="0.1" name="altura" id="altura" required>
             <div class="btn-visiveis">
                 <button type="button" onclick="enviar('pesquisar')">Pesquisar</button>
                 <button type="button" onclick="enviar('incluir')">Incluir</button>
@@ -46,10 +46,12 @@
                 <button type="button" onclick="enviar('alterar')">Alterar</button>
                 <button type="button" onclick="enviar('excluir')">Excluir</button>
             </div>
+            <div class="peso-ideal-div" style="display: none;">
+                <button class="peso-ideal" type="button" onclick="calcularPesoIdeal()">Calcular Peso Ideal</button>
+            </div>
         </form>
+        <div id="resultado" class="resultado"></div>
         
-        <h3>Resultado</h2>
-        <div id="resultado"></div>
     </div>
 
     <script>
@@ -58,11 +60,30 @@
             const data = new FormData(form);
             return Object.fromEntries(data.entries());
         }
+        const calcularPesoIdeal = async () => {
+            const id = document.getElementById('id').value;
 
+            let url =  `http://localhost:8010/api/v1/calcular_peso_ideal/?id=${id}`
+            const peso = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            });
+            if (!peso.ok) {
+                return document.getElementById('resultado').innerText = 'Erro: ' + peso.statusText;
+            }
+            const data = await peso.json();
+            if (data.length === 0) {
+                return document.getElementById('resultado').innerText = 'Nenhum registro encontrado';
+            }
+
+            alert(peso_ideal);
+
+        }
         const enviar = async (acao) => {
             const dados = getFormData();
+            dados.altura = dados.altura * 100;
 
-            let url = 'http://127.0.0.1:8010/api/v1/pessoa/';
+            let url = 'http://localhost:8010/api/v1/pessoa/';
             let method = 'POST';
             let map_acao = {
                 incluir: ['POST', ''],
@@ -95,7 +116,7 @@
                 return document.getElementById('resultado').innerText = 'Erro: ' + response.statusText;
             }
             const data = await response.json();
-            if (acao == 'pesquisar') {
+            if (acao == 'pesquisar' || acao == 'incluir') {
                 if (data.length === 0) {
                     return document.getElementById('resultado').innerText = 'Nenhum registro encontrado';
                 }
@@ -104,9 +125,16 @@
                 document.getElementById('nome').value = pessoa.nome;
                 document.getElementById('data_nascimento').value = pessoa.data_nascimento;
                 document.getElementById('sexo').value = pessoa.sexo;
+                document.getElementById('id').value = pessoa.id;
                 document.getElementById('cpf').value = pessoa.cpf;
                 document.getElementById('peso').value = pessoa.peso;
-                document.getElementById('altura').value = pessoa.altura;
+                document.getElementById('altura').value = pessoa.altura / 100;
+                //  mudar a class dos botões invisiveis para visiveis
+                document.querySelector('.btn-invisiveis').classList.add('btn-visiveis');
+                document.querySelector('.btn-invisiveis').classList.remove('btn-invisiveis');
+                document.querySelector('.peso-ideal-div').style.display = 'block';
+                document.querySelector('.peso-ideal-div').classList.add('btn-visiveis');
+
             } else {
                 document.getElementById('resultado').innerText = data.message || 'Operação realizada com sucesso';
             }

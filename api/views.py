@@ -62,7 +62,7 @@ class PessoaViewSet(viewsets.ModelViewSet):
     def calcular_peso_ideal(self, request):
         data = request.data
         peso_ideal = None
-
+        print(data)
         if not data.get('id'):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:

@@ -21,6 +21,7 @@ peso_ideal_api/
 │   ├── migrations/
 │   ├── models.py         # Model Pessoa
 │   ├── serializers.py    # DTO
+│   ├── cpf.py            # Cpf como class
 │   ├── services.py       # Camada de serviço
 │   ├── tasks.py          # Camada de Lógica
 │   ├── views.py          # Controllers (REST)
@@ -83,16 +84,4 @@ Acesse a interface Swagger em:
 | GET    | /api/pessoa/&lt;id&gt;/peso-ideal/| Calcular peso ideal        |
 
 🧪 Testes
-Para rodar os testes:
-
-python manage.py test
-Os testes cobrem:
-
-Criação, alteração, exclusão e listagem de pessoas
-
-Validação da fórmula de peso ideal
-
-Verificação de respostas HTTP e integridade do banco
-
-🧑‍💻 Interface Cliente
-A interface é feita com HTML5. O frontend comunica-se com o backend via chamadas REST em JSON. O botão de "Calcular Peso Ideal" envia um GET ao backend e exibe o resultado em uma popup/modal.
+- Em criação
