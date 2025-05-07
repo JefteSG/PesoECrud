@@ -33,5 +33,5 @@ ENV PYTHONUNBUFFERED=1
  
 USER appuser
  
-EXPOSE 8000 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+EXPOSE 8010 
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8010"]

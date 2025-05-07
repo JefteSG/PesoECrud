@@ -4,23 +4,23 @@ from .task import Task
 class Service:
     @staticmethod
     def incluir(data):
+        
         try:
-            print(data)
-            Task.incluir(data)
+            return Task.incluir(data)
         except Exception as e:
             raise e
 
     @staticmethod
     def alterar(data):
         try:
-            Task.alterar(data)
+            return Task.alterar(data)
         except Exception as e:
             raise e
 
     @staticmethod
     def excluir(data):
         try:
-            Task.excluir(data)
+            return Task.excluir(data)
         except Exception as e:
             raise e
 

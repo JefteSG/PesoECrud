@@ -1,13 +1,12 @@
 from rest_framework import serializers
 from .models import Pessoa
 
-
-class DTOPessoa(serializers.Serializer):
+class DTOPessoa(serializers.ModelSerializer):
     class Meta:
-        fields = ('id', 'nome', 'data_nascimento', 'sexo', 'cpf', 'peso', 'altura')
         model = Pessoa
+        fields = "__all__"
 
-
-    def create(self, validated_data):
-        return Pessoa.objects.create(**validated_data)
+        
+    # def create(self, validated_data):
+    #     return Pessoa.objects.create(**validated_data)
     

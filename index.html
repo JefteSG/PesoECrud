@@ -1,11 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peso ideal</title>
+    <title>Peso Ideal</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="container">
+        <!-- Nesta tela deverá ter os botões Incluir, Alterar, Excluir e Pesquisar. Todos os
+        4 deverão ir no server. O botão Alterar e Excluir deverá ser chamado somente
+        depois do Pesquisar. -->
+        <h2>Peso Ideal Baseado na altura e 
+            sexo de pessoas cadastradas</h1>
     
+        <form id="formPessoa">
+            <label for="id">ID:</label>
+            <input type="number" name="id" id="id">
+    
+            <label for="nome">Nome:</label>
+            <input type="text" name="nome" id="nome">
+    
+            <label for="data_nascimento">Data de nascimento:</label>
+            <input type="date" name="data_nascimento" id="data_nascimento">
+    
+            <label for="sexo">Sexo:</label>
+            <select name="sexo" id="sexo" required>
+                <option value="M">Masculino</option>
+                <option value="F">Feminino</option>
+            </select>
+    
+            <label for="cpf">CPF (somente números):</label>
+            <input type="text" name="cpf" id="cpf">
+    
+            <label for="peso">Peso (em quilos):</label>
+            <input type="number" step="0.1" name="peso" id="peso">
+    
+            <label for="altura">Altura (em centimetros):</label>
+            <input type="number" name="altura" id="altura" required>
+            <div class="btn-visiveis">
+                <button type="button" onclick="enviar('pesquisar')">Pesquisar</button>
+                <button type="button" onclick="enviar('incluir')">Incluir</button>
+            </div>
+            <div class="btn-invisiveis">
+                <button type="button" onclick="enviar('alterar')">Alterar</button>
+                <button type="button" onclick="enviar('excluir')">Excluir</button>
+            </div>
+        </form>
+        
+        <h3>Resultado</h2>
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        const getFormData = () => {
+            const form = document.getElementById('formPessoa');
+            const data = new FormData(form);
+            return Object.fromEntries(data.entries());
+        }
+
+        const enviar = async (acao) => {
+            const dados = getFormData();
+
+            let url = 'http://127.0.0.1:8010/api/v1/pessoa/';
+            let method = 'POST';
+            let map_acao = {
+                incluir: ['POST', ''],
+                alterar: ['PUT', `?id=${dados.id}/`],
+                excluir: ['DELETE', `?id=${dados.id}/`],
+                pesquisar: ['GET', `?id=${dados.id || ''}`]
+            };
+            if (!acao in map_acao) {
+                alert('Ação inválida');
+                return;
+            } 
+            method = map_acao[acao][0];
+            url += map_acao[acao][1];
+
+            
+
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+
+            if (method !== 'GET' && method !== 'DELETE') {
+                options.body = JSON.stringify(dados);
+            }
+
+            const response = await fetch(url, options)
+            if (!response.ok) {
+                return document.getElementById('resultado').innerText = 'Erro: ' + response.statusText;
+            }
+            const data = await response.json();
+            if (acao == 'pesquisar') {
+                if (data.length === 0) {
+                    return document.getElementById('resultado').innerText = 'Nenhum registro encontrado';
+                }
+                console.log(data);
+                const pessoa = data;
+                document.getElementById('nome').value = pessoa.nome;
+                document.getElementById('data_nascimento').value = pessoa.data_nascimento;
+                document.getElementById('sexo').value = pessoa.sexo;
+                document.getElementById('cpf').value = pessoa.cpf;
+                document.getElementById('peso').value = pessoa.peso;
+                document.getElementById('altura').value = pessoa.altura;
+            } else {
+                document.getElementById('resultado').innerText = data.message || 'Operação realizada com sucesso';
+            }
+            
+        }
+    </script>
 </body>
 </html>

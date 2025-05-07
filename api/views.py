@@ -1,3 +1,4 @@
+from .models import Pessoa
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .serializers import DTOPessoa
@@ -8,13 +9,18 @@ from .service import Service
 
 
 class PessoaViewSet(viewsets.ModelViewSet):
-
+    queryset = Pessoa.objects.all()
+    serializer_class = DTOPessoa
 
     @action(methods=['get'], detail=False)
     def pesquisar(self, request):
         data = request.query_params.dict()
         pessoas = Service.pesquisar(data)
-        serializer = DTOPessoa(pessoas, many=True)
+        if not isinstance(pessoas, Pessoa):
+            serializer = DTOPessoa(pessoas, many=True)
+        else:
+            serializer = DTOPessoa(pessoas)
+
         return Response(serializer.data)
 
 
@@ -23,7 +29,8 @@ class PessoaViewSet(viewsets.ModelViewSet):
         data = request.data
         try:
             pessoa = Service.incluir(data)
-            serializer = DTOPessoa(pessoa)
+            serializer = DTOPessoa(instance=pessoa)
+            print(serializer.data)
             return Response(serializer.data)
         except Exception as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)

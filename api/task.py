@@ -11,6 +11,7 @@ class Task:
         serializer = DTOPessoa(data=data)
         if serializer.is_valid():
             print('valido')
+            serializer.full_clean()
             return serializer.save()
         
         raise ValueError(serializer.errors)
@@ -20,7 +21,7 @@ class Task:
         pessoa = Pessoa.objects.get(id=data.get('id'))
         serializer = DTOPessoa(pessoa, data=data, patial=True)
         if serializer.is_valid():
-            return pessoa.save()
+            return serializer.save()
         
         raise ValueError(pessoa.errors)
     
@@ -31,7 +32,7 @@ class Task:
             pessoa = Pessoa.objects.get(id=data.get('id'))
         except Pessoa.DoesNotExist:
             raise ValueError('Pessoa não encontrada')
-        pessoa.delete()
+        return pessoa.delete()
 
 
     def pesquisar(data):

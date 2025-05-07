@@ -1,6 +1,8 @@
 import datetime
 from django.db import models
 from .cpf import CPF
+from django.core.exceptions import ValidationError
+
 
 # Create your models here.
 class Pessoa(models.Model):
@@ -9,19 +11,18 @@ class Pessoa(models.Model):
     data_nascimento = models.DateField(null=True)
     sexo = models.CharField(max_length=1)
     cpf = models.CharField(max_length=11)
-    peso = models.FloatField(default=None, null=True)
-    altura = models.FloatField(default=None, null=True)
+    peso = models.FloatField()
+    altura = models.FloatField()
 
-    def clean(self):
-        try:
-            datetime.strptime(self.data_nascimento, "%Y-%m-%d")
-        except ValueError:
-            raise ValueError("VALOR DE DATA INVÁLIDO")
-        
+    def clean(self): 
         cpf = CPF(self.cpf)
         if not cpf.validate():
-            raise ValueError('O CPF informado não é válido') 
+            raise ValidationError({'cpf': 'CPF inválido'}) 
         
+        if self.sexo not in ['M', 'F']:
+            raise ValidationError({'sexo': 'Sexo deve ser "M" ou "F"'})
+
+
     
     def calcular_peso_ideal(self):
 

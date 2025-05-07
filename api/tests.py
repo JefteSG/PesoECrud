@@ -26,7 +26,7 @@ class TestService(TestCase):
             'peso': 70,
             'altura': 1.75
         }
-        self.service.incluir(data)
+        self.pessoa_criada = self.service.incluir(data)
         self.assertTrue(Pessoa.objects.filter(cpf='40888833052').exists())
 
     def test_incluir_cpf_invalido(self):
