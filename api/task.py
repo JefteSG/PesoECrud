@@ -11,7 +11,6 @@ class Task:
         serializer = DTOPessoa(data=data)
         if serializer.is_valid():
             print('valido')
-            serializer.full_clean()
             return serializer.save()
         
         raise ValueError(serializer.errors)
@@ -45,3 +44,4 @@ class Task:
         pessoa = Pessoa.objects.get(id=data.get('id'))
         return pessoa.calcular_peso_ideal()
         
+

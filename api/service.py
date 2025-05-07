@@ -1,10 +1,12 @@
+from .cpf import CPF
 from .task import Task
 
 
 class Service:
     @staticmethod
     def incluir(data):
-        
+        if not CPF(data['cpf']).validate():
+            raise ValueError(f"CPF inválido: {data['cpf']}")
         try:
             return Task.incluir(data)
         except Exception as e:
@@ -12,6 +14,8 @@ class Service:
 
     @staticmethod
     def alterar(data):
+        if not CPF(data['cpf']).validate():
+            raise ValueError(f"CPF inválido: {data['cpf']}")
         try:
             return Task.alterar(data)
         except Exception as e:

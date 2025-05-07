@@ -12,29 +12,28 @@ Este projeto consiste em uma API RESTful desenvolvida com Django e PostgreSQL, c
 - **ORM**: Django ORM
 ## 🔧 Swagger
 
-<img src="./assets/swagger.png">
+<img href="https://github.com/JefteSG/ImcECrud/blob/main/assets/swagger.png">
 
 ## 📁 Estrutura do Projeto
-
+```plaintext
 peso_ideal_api/
 ├── pessoa/
-│ ├── migrations/
-│ ├── models.py # Model Pessoa
-│ ├── serializers.py # DTO
-│ ├── services.py # Camada de serviço
-│ ├── tasks.py # Camada de Lógica 
-│ ├── views.py # Controllers (REST)
-│ └── tests.py # Testes automatizados
+│   ├── migrations/
+│   ├── models.py         # Model Pessoa
+│   ├── serializers.py    # DTO
+│   ├── services.py       # Camada de serviço
+│   ├── tasks.py          # Camada de Lógica
+│   ├── views.py          # Controllers (REST)
+│   └── tests.py          # Testes automatizados
 ├── peso_ideal_api/
-│ ├── settings.py
-│ ├── urls.py # Inclui Swagger e rotas da API
-│ └── wsgi.py
+│   ├── settings.py
+│   ├── urls.py           # Inclui Swagger e rotas da API
+│   └── wsgi.py
 ├── manage.py
 ├── requirements.txt
 ├── Dockerfile
 └── docker-compose.yml
-
-
+```
 
 ## 📌 Requisitos da Prova
 
@@ -57,39 +56,20 @@ Para mulheres = (62.1 * altura) - 44.7
 ## ⚙️ Instalação e Execução
 
 ### Pré-requisitos
-- Python 3.11+
-- PostgreSQL
-- Virtualenv
-- VSCode
+- Docker
+- Docker-compose
 
 ### Passos
 
 ```bash
 # Clone o projeto
-git clone https://github.com/seu-usuario/projeto-pessoa.git
-cd projeto-pessoa
+git clone git@github.com:JefteSG/PesoECrud.git peso_ideal_api
+cd peso_ideal_api
 
-# Crie e ative o ambiente virtual
-python -m venv venv
-source venv/bin/activate  # ou venv\Scripts\activate no Windows
-
-# Instale as dependências
-pip install -r requirements.txt
-
-# Configure o banco de dados no settings.py
-
-# Execute as migrações
-python manage.py makemigrations
-python manage.py migrate
-
-# Execute os testes
-python manage.py test
-
-# Execute o servidor
-python manage.py runserver
+docker-compose up --build
 ```
 Acesse a interface Swagger em:
-👉 http://localhost:8010/swagger/
+👉 http://localhost:8010/docs/
 
 🔍 Endpoints Principais
 
