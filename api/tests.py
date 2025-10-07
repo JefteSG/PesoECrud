@@ -1,13 +1,11 @@
+from rest_framework.test import APITestCase
 from django.test import TestCase
+from rest_framework import status
+from .models import Pessoa
 from .cpf import CPF
-from .service import Service
-from .task import Task
-from .models import Pessoa 
 
-
-class TestService(TestCase):
+class TestPessoaAPI(APITestCase):
     def setUp(self):
-        self.service = Service
         self.pessoa = Pessoa.objects.create(
             nome='Jefte Sales Gonçalves',
             data_nascimento='1997-08-22',
@@ -17,19 +15,20 @@ class TestService(TestCase):
             altura=1.80
         )
 
-    def test_incluir(self):
+    def test_create_pessoa(self):
         data = {
             'nome': 'Fulano de Tal',
             'data_nascimento': '1980-05-10',
             'sexo': 'M',
-            'cpf': '40888833052',  # CPF válido
+            'cpf': '11144477735',  # CPF válido
             'peso': 70,
             'altura': 1.75
         }
-        self.pessoa_criada = self.service.incluir(data)
-        self.assertTrue(Pessoa.objects.filter(cpf='40888833052').exists())
+        response = self.client.post('/api/v1/pessoa/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Pessoa.objects.filter(cpf='11144477735').exists())
 
-    def test_incluir_cpf_invalido(self):
+    def test_create_pessoa_cpf_invalido(self):
         data = {
             'nome': 'Ciclano de Tal',
             'data_nascimento': '1985-11-15',
@@ -38,12 +37,11 @@ class TestService(TestCase):
             'peso': 75,
             'altura': 1.70
         }
-        with self.assertRaises(ValueError):
-            self.service.incluir(data)
+        response = self.client.post('/api/v1/pessoa/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_alterar(self):
+    def test_update_pessoa(self):
         data = {
-            'id': self.pessoa.id,
             'nome': 'Rodrigo Sales Gonçalves',
             'data_nascimento': '1997-08-25',
             'sexo': 'M',
@@ -51,24 +49,26 @@ class TestService(TestCase):
             'peso': 82,
             'altura': 1.82
         }
-        self.service.alterar(data)
-        pessoa = Pessoa.objects.get(id=self.pessoa.id)
-        self.assertEqual(pessoa.nome, 'Rodrigo Sales Gonçalves')
-        self.assertEqual(pessoa.peso, 82)
+        response = self.client.put(f'/api/v1/pessoa/{self.pessoa.id}/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.pessoa.refresh_from_db()
+        self.assertEqual(self.pessoa.peso, 82)
 
-    def test_pesquisar_id(self):
-        data = {'id': self.pessoa.id}
-        pessoa_encontrada = self.service.pesquisar(data)
-        self.assertEqual(pessoa_encontrada.peso, 80)
+    def test_retrieve_pessoa(self):
+        response = self.client.get(f'/api/v1/pessoa/{self.pessoa.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['peso'], 80)
 
-    def test_pesquisar_todos(self):
-        pessoas_encontradas = self.service.pesquisar({})
-        self.assertEqual(len(pessoas_encontradas), 1)
+    def test_list_pessoas(self):
+        response = self.client.get('/api/v1/pessoa/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
 
-    def test_excluir(self):
-        data = {'id': self.pessoa.id}
-        self.service.excluir(data)
+    def test_delete_pessoa(self):
+        response = self.client.delete(f'/api/v1/pessoa/{self.pessoa.id}/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Pessoa.objects.filter(id=self.pessoa.id).exists())
+
 
 
 class TestCPF(TestCase):
