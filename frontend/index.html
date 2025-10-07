@@ -12,7 +12,7 @@
         4 deverão ir no server. O botão Alterar e Excluir deverá ser chamado somente
         depois do Pesquisar. -->
         <h2>Peso Ideal Baseado na altura e 
-            sexo de pessoas cadastradas</h1>
+            sexo de pessoas cadastradas</h2>
     
         <form id="formPessoa">
             <label for="id">ID:</label>
@@ -50,11 +50,22 @@
                 <button class="peso-ideal" type="button" onclick="calcularPesoIdeal()">Calcular Peso Ideal</button>
             </div>
         </form>
-        <div id="resultado" class="resultado"></div>
+    <div id="loadingIndicator" class="loading-indicator" style="display: none;">Carregando...</div>
+    <div id="resultado" class="resultado"></div>
         
     </div>
 
     <script>
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        const showLoading = () => {
+            loadingIndicator.style.display = 'flex';
+        };
+
+        const hideLoading = () => {
+            loadingIndicator.style.display = 'none';
+        };
+
         const getFormData = () => {
             const form = document.getElementById('formPessoa');
             const data = new FormData(form);
@@ -62,43 +73,59 @@
         }
         const calcularPesoIdeal = async () => {
             const id = document.getElementById('id').value;
+            const resultadoDiv = document.getElementById('resultado');
+            resultadoDiv.innerText = ''; // Clear previous messages
 
-            let url =  `http://localhost:8010/api/v1/calcular_peso_ideal/?id=${id}`
-            const peso = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            });
-            if (!peso.ok) {
-                return document.getElementById('resultado').innerText = 'Erro: ' + peso.statusText;
-            }
-            const data = await peso.json();
-            if (data.length === 0) {
-                return document.getElementById('resultado').innerText = 'Nenhum registro encontrado';
+            if (!id) {
+                resultadoDiv.innerText = 'Por favor, pesquise uma pessoa primeiro.';
+                return;
             }
 
-            alert(peso_ideal);
+            showLoading();
+            try {
+                let url =  `http://localhost:8010/api/v1/pessoa/${id}/peso-ideal/`
+                const response = await fetch(url, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    resultadoDiv.innerText = 'Erro ao calcular peso ideal: ' + (errorData.error || response.statusText);
+                    return;
+                }
+                const data = await response.json();
+                if (data.peso_ideal === undefined) {
+                    resultadoDiv.innerText = 'Não foi possível calcular o peso ideal.';
+                    return;
+                }
+
+                resultadoDiv.innerText = 'Peso Ideal: ' + data.peso_ideal.toFixed(2) + ' kg';
+            } catch (error) {
+                resultadoDiv.innerText = 'Erro de conexão: ' + error.message;
+            } finally {
+                hideLoading();
+            }
 
         }
         const enviar = async (acao) => {
             const dados = getFormData();
-            dados.altura = dados.altura * 100;
-
+            const resultadoDiv = document.getElementById('resultado');
+            resultadoDiv.innerText = ''; // Clear previous messages
+            
             let url = 'http://localhost:8010/api/v1/pessoa/';
             let method = 'POST';
             let map_acao = {
                 incluir: ['POST', ''],
-                alterar: ['PUT', `?id=${dados.id}/`],
-                excluir: ['DELETE', `?id=${dados.id}/`],
-                pesquisar: ['GET', `?id=${dados.id || ''}`]
+                alterar: ['PUT', `${dados.id}/`],
+                excluir: ['DELETE', `${dados.id}/`],
+                pesquisar: ['GET', `${dados.id || ''}`]
             };
             if (!acao in map_acao) {
-                alert('Ação inválida');
+                resultadoDiv.innerText = 'Ação inválida';
                 return;
             } 
             method = map_acao[acao][0];
             url += map_acao[acao][1];
-
-            
 
             const options = {
                 method,
@@ -111,32 +138,97 @@
                 options.body = JSON.stringify(dados);
             }
 
-            const response = await fetch(url, options)
-            if (!response.ok) {
-                return document.getElementById('resultado').innerText = 'Erro: ' + response.statusText;
-            }
-            const data = await response.json();
-            if (acao == 'pesquisar' || acao == 'incluir') {
-                if (data.length === 0) {
-                    return document.getElementById('resultado').innerText = 'Nenhum registro encontrado';
+            showLoading();
+            try {
+                const response = await fetch(url, options)
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (response.status === 404) {
+                        resultadoDiv.innerText = 'Usuário não encontrado.';
+                    } else {
+                        resultadoDiv.innerText = 'Erro na operação: ' + (errorData.error || response.statusText);
+                    }
+                    return;
                 }
-                console.log(data);
-                const pessoa = data;
-                document.getElementById('nome').value = pessoa.nome;
-                document.getElementById('data_nascimento').value = pessoa.data_nascimento;
-                document.getElementById('sexo').value = pessoa.sexo;
-                document.getElementById('id').value = pessoa.id;
-                document.getElementById('cpf').value = pessoa.cpf;
-                document.getElementById('peso').value = pessoa.peso;
-                document.getElementById('altura').value = pessoa.altura / 100;
-                //  mudar a class dos botões invisiveis para visiveis
-                document.querySelector('.btn-invisiveis').classList.add('btn-visiveis');
-                document.querySelector('.btn-invisiveis').classList.remove('btn-invisiveis');
-                document.querySelector('.peso-ideal-div').style.display = 'block';
-                document.querySelector('.peso-ideal-div').classList.add('btn-visiveis');
-
-            } else {
-                document.getElementById('resultado').innerText = data.message || 'Operação realizada com sucesso';
+                const data = await response.json();
+                if (acao == 'pesquisar') {
+                    if (Array.isArray(data)) {
+                        if (data.length > 1) {
+                            resultadoDiv.innerText = 'Múltiplos registros encontrados. Por favor, especifique um ID para editar/excluir.';
+                            // Clear form
+                            formPessoa.reset();
+                            document.getElementById('id').value = '';
+                            document.querySelector('.btn-invisiveis').classList.remove('btn-visiveis');
+                            document.querySelector('.btn-invisiveis').classList.add('btn-invisiveis');
+                            document.querySelector('.peso-ideal-div').style.display = 'none';
+                            document.querySelector('.peso-ideal-div').classList.remove('btn-visiveis');
+                            return;
+                        } else if (data.length === 0) {
+                            resultadoDiv.innerText = 'Nenhum registro encontrado.';
+                            formPessoa.reset();
+                            document.getElementById('id').value = '';
+                            document.querySelector('.btn-invisiveis').classList.remove('btn-visiveis');
+                            document.querySelector('.btn-invisiveis').classList.add('btn-invisiveis');
+                            document.querySelector('.peso-ideal-div').style.display = 'none';
+                            document.querySelector('.peso-ideal-div').classList.remove('btn-visiveis');
+                            return;
+                        }
+                        // If only one item in array, treat as single object
+                        const pessoa = data[0];
+                        document.getElementById('nome').value = pessoa.nome;
+                        document.getElementById('data_nascimento').value = pessoa.data_nascimento;
+                        document.getElementById('sexo').value = pessoa.sexo;
+                        document.getElementById('id').value = pessoa.id;
+                        document.getElementById('cpf').value = pessoa.cpf;
+                        document.getElementById('peso').value = pessoa.peso;
+                        document.getElementById('altura').value = pessoa.altura;
+                        document.querySelector('.btn-invisiveis').classList.add('btn-visiveis');
+                        document.querySelector('.btn-invisiveis').classList.remove('btn-invisiveis');
+                        document.querySelector('.peso-ideal-div').style.display = 'block';
+                        document.querySelector('.peso-ideal-div').classList.add('btn-visiveis');
+                    } else { // Single object
+                        const pessoa = data;
+                        document.getElementById('nome').value = pessoa.nome;
+                        document.getElementById('data_nascimento').value = pessoa.data_nascimento;
+                        document.getElementById('sexo').value = pessoa.sexo;
+                        document.getElementById('id').value = pessoa.id;
+                        document.getElementById('cpf').value = pessoa.cpf;
+                        document.getElementById('peso').value = pessoa.peso;
+                        document.getElementById('altura').value = pessoa.altura;
+                        document.querySelector('.btn-invisiveis').classList.add('btn-visiveis');
+                        document.querySelector('.btn-invisiveis').classList.remove('btn-invisiveis');
+                        document.querySelector('.peso-ideal-div').style.display = 'block';
+                        document.querySelector('.peso-ideal-div').classList.add('btn-visiveis');
+                    }
+                } else if (acao == 'incluir') {
+                    const pessoa = data;
+                    document.getElementById('nome').value = pessoa.nome;
+                    document.getElementById('data_nascimento').value = pessoa.data_nascimento;
+                    document.getElementById('sexo').value = pessoa.sexo;
+                    document.getElementById('id').value = pessoa.id;
+                    document.getElementById('cpf').value = pessoa.cpf;
+                    document.getElementById('peso').value = pessoa.peso;
+                    document.getElementById('altura').value = pessoa.altura;
+                    document.querySelector('.btn-invisiveis').classList.add('btn-visiveis');
+                    document.querySelector('.btn-invisiveis').classList.remove('btn-invisiveis');
+                    document.querySelector('.peso-ideal-div').style.display = 'block';
+                    document.querySelector('.peso-ideal-div').classList.add('btn-visiveis');
+                    resultadoDiv.innerText = 'Pessoa incluída com sucesso!';
+                } else if (acao == 'alterar') {
+                    resultadoDiv.innerText = 'Pessoa alterada com sucesso!';
+                } else if (acao == 'excluir') {
+                    resultadoDiv.innerText = 'Pessoa excluída com sucesso!';
+                    formPessoa.reset();
+                    document.getElementById('id').value = '';
+                    document.querySelector('.btn-invisiveis').classList.remove('btn-visiveis');
+                    document.querySelector('.btn-invisiveis').classList.add('btn-invisiveis');
+                    document.querySelector('.peso-ideal-div').style.display = 'none';
+                    document.querySelector('.peso-ideal-div').classList.remove('btn-visiveis');
+                }
+            } catch (error) {
+                resultadoDiv.innerText = 'Erro de conexão: ' + error.message;
+            } finally {
+                hideLoading();
             }
             
         }
