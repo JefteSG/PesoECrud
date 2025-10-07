@@ -36,6 +36,8 @@ services:
       - "8010:8010"
     depends_on:
       - db
+    volumes:
+      - .:/app
     networks:
       - my_network
     
